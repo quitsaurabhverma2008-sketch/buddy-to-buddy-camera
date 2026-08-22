@@ -414,10 +414,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       />
 
       {/* Footer as seen in Image 4 */}
-      <footer className="w-full max-w-4xl mt-16 sm:mt-20 pt-6 border-t border-[#c9c4d7]/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#787586] relative z-10">
-        <div className="flex items-center gap-2">
-          <span className="text-[#5843d1] font-bold">Buddy to Buddy</span>
-          <span>© 2024 • Made with love</span>
+      <footer className="w-full max-w-4xl mt-16 sm:mt-20 pt-6 pb-20 sm:pb-24 border-t border-[#c9c4d7]/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#787586] relative z-10">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
+          <div className="flex items-center gap-2">
+            <span className="text-[#5843d1] font-bold">Buddy to Buddy</span>
+            <span>•</span>
+            <span className="px-2.5 py-1 rounded-full bg-[#f2f0ff] text-[#5843d1] font-semibold border border-[#dcd7f9]">
+              The web made by Saurabh ✨
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-6">
           <button onClick={() => handleAction('community')} className="hover:text-[#5843d1] transition-colors">Privacy</button>

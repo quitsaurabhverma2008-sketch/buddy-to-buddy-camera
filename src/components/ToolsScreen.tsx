@@ -367,6 +367,22 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
 
       </div>
 
+      {/* Footer */}
+      <footer className="w-full max-w-4xl mt-12 pt-6 pb-20 sm:pb-24 border-t border-[#c9c4d7]/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#787586] relative z-10">
+        <div className="flex items-center gap-2">
+          <span className="text-[#5843d1] font-bold">Buddy to Buddy</span>
+          <span>•</span>
+          <span className="px-2.5 py-1 rounded-full bg-[#f2f0ff] text-[#5843d1] font-semibold border border-[#dcd7f9]">
+            The web made by Saurabh ✨
+          </span>
+        </div>
+        <div className="flex items-center gap-6">
+          <button onClick={() => onSelectTab('community')} className="hover:text-[#5843d1] transition-colors">Privacy</button>
+          <button onClick={() => onSelectTab('community')} className="hover:text-[#5843d1] transition-colors">Terms</button>
+          <button onClick={() => onSelectTab('chat')} className="hover:text-[#5843d1] transition-colors">Contact</button>
+        </div>
+      </footer>
+
     </div>
   );
 };
