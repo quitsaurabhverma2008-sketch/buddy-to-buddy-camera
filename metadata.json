@@ -1,0 +1,10 @@
+{
+  "name": "Buddy to Buddy",
+  "description": "A soft claymorphic photo journal and camera experience with instant local persistence, memory collections, tools, and batch photo management.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

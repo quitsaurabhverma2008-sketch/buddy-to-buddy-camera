@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #f9f9fb;
+    color: #1a1c1d;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Claymorphic Shadow Utilities */
+.clay-card {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    20px 20px 50px rgba(90, 70, 211, 0.08),
+    -10px -10px 30px rgba(255, 255, 255, 0.9),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.9),
+    inset -3px -3px 6px rgba(90, 70, 211, 0.06);
+  border-radius: 2rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.clay-card-secondary {
+  background: rgba(243, 243, 245, 0.85);
+  box-shadow: 
+    16px 16px 40px rgba(0, 0, 0, 0.05),
+    -8px -8px 24px rgba(255, 255, 255, 0.8),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.04);
+  border-radius: 2rem;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.clay-btn-primary {
+  background: linear-gradient(135deg, #715eeb 0%, #5843d1 100%);
+  color: #ffffff;
+  box-shadow: 
+    0 10px 24px rgba(88, 67, 209, 0.3),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-btn-primary:active {
+  transform: scale(0.95);
+  box-shadow: 
+    0 4px 10px rgba(88, 67, 209, 0.25),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.3);
+}
+
+.clay-btn-mint {
+  background: linear-gradient(135deg, #b9f4dc 0%, #a8e6cf 100%);
+  color: #1a5643;
+  box-shadow: 
+    0 8px 20px rgba(168, 230, 207, 0.4),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 5px rgba(44, 105, 86, 0.15);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-btn-mint:active {
+  transform: scale(0.95);
+}
+
+.clay-btn-coral {
+  background: linear-gradient(135deg, #ffb3b8 0%, #ff8a93 100%);
+  color: #fff;
+  box-shadow: 
+    0 8px 20px rgba(255, 138, 147, 0.35),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.7),
+    inset -2px -2px 5px rgba(186, 26, 26, 0.2);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-btn-coral:active {
+  transform: scale(0.95);
+}
+
+.clay-btn-yellow {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fed330 100%);
+  color: #795503;
+  box-shadow: 
+    0 8px 20px rgba(254, 211, 48, 0.35),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 5px rgba(144, 107, 20, 0.2);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-btn-lavender {
+  background: linear-gradient(135deg, #e4deff 0%, #c7bfff 100%);
+  color: #4228bb;
+  box-shadow: 
+    0 8px 20px rgba(199, 191, 255, 0.4),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 5px rgba(66, 40, 187, 0.15);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-btn-circle {
+  box-shadow: 
+    6px 6px 16px rgba(90, 70, 211, 0.1),
+    -4px -4px 12px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 4px rgba(90, 70, 211, 0.08);
+  transition: all 0.2s ease;
+}
+
+.clay-btn-circle:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    8px 8px 20px rgba(90, 70, 211, 0.15),
+    -4px -4px 12px rgba(255, 255, 255, 0.9),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+.clay-btn-circle:active {
+  transform: scale(0.92);
+}
+
+.clay-inset {
+  background: rgba(240, 240, 244, 0.7);
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.08),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.8);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

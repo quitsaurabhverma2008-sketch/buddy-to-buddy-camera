@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "photos": {
+      "title": "Photo Records",
+      "description": "User memories and captured photos stored persistently in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "title": { "type": "string" },
+        "caption": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "dateFormatted": { "type": "string" },
+        "favorite": { "type": "boolean" },
+        "tag": { "type": "string" },
+        "filter": { "type": "string" },
+        "location": { "type": "string" }
+      },
+      "required": ["id", "imageUrl", "title", "timestamp", "favorite"]
+    },
+    "community_posts": {
+      "title": "Community Posts",
+      "description": "Community posts and shared memory cards",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "author": { "type": "string" },
+        "avatarBg": { "type": "string" },
+        "timeAgo": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "likes": { "type": "number" },
+        "comments": { "type": "number" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "author", "title", "imageUrl", "likes"]
+    },
+    "chat_messages": {
+      "title": "Chat Messages",
+      "description": "Companion conversation logs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sender": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "sender", "text"]
+    }
+  }
+}
