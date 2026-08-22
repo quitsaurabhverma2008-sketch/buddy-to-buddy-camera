@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationTab, PhotoRecord, AppSettings } from './types';
 import { storageService } from './services/storage';
+import { startPresenceHeartbeat } from './services/presence';
 import { soundEngine } from './utils/audio';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -60,8 +61,12 @@ export default function App() {
     }
     initCameraPermission();
 
+    // Start automatic web activity / last opened presence tracker (no login required)
+    const stopPresence = startPresenceHeartbeat();
+
     return () => {
       unsubscribe();
+      stopPresence();
     };
   }, []);
 

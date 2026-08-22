@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { soundEngine } from '../utils/audio';
-import { Send, Sparkles, Smile, Bot, CheckCheck, Cloud } from 'lucide-react';
+import { Send, Sparkles, Smile, Bot, CheckCheck, Cloud, Clock, Smartphone, Monitor, Activity, ShieldCheck } from 'lucide-react';
 import { db } from '../services/firebase';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { subscribeToWebActivity, getTimeElapsedString, WebActivityData } from '../services/presence';
 
 interface ChatMessage {
   id: string;
@@ -39,8 +40,32 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 export const ChatScreen: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
+  const [webActivity, setWebActivity] = useState<WebActivityData | null>(null);
+  const [elapsedInfo, setElapsedInfo] = useState<{ text: string; isOnline: boolean }>({ text: 'Active now', isOnline: true });
 
-  // Sync chat messages with Cloud Firestore
+  // 1. Subscribe to Live Firestore Web Activity (Last opened tracker)
+  useEffect(() => {
+    const unsubPresence = subscribeToWebActivity((activity) => {
+      if (activity) {
+        setWebActivity(activity);
+        setElapsedInfo(getTimeElapsedString(activity.lastActiveTimestamp));
+      }
+    });
+
+    // Update relative elapsed time every 10 seconds
+    const interval = setInterval(() => {
+      if (webActivity?.lastActiveTimestamp) {
+        setElapsedInfo(getTimeElapsedString(webActivity.lastActiveTimestamp));
+      }
+    }, 10000);
+
+    return () => {
+      unsubPresence();
+      clearInterval(interval);
+    };
+  }, [webActivity?.lastActiveTimestamp]);
+
+  // 2. Sync chat messages with Cloud Firestore
   useEffect(() => {
     async function initChat() {
       try {
@@ -130,31 +155,76 @@ export const ChatScreen: React.FC = () => {
     <div id="chat-screen" className="w-full min-h-screen pt-24 pb-36 px-4 sm:px-8 max-w-3xl mx-auto flex flex-col justify-between">
       
       {/* Header */}
-      <div className="pt-4 pb-6 flex items-center justify-between border-b border-zinc-200">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#5843d1] to-[#8d79ff] flex items-center justify-center text-white shadow-md relative">
-            <Sparkles className="w-6 h-6" />
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#53dca8] border-2 border-white rounded-full" />
+      <div className="pt-4 pb-4 flex flex-col gap-3 border-b border-zinc-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#5843d1] to-[#8d79ff] flex items-center justify-center text-white shadow-md relative">
+              <Sparkles className="w-6 h-6" />
+              <span 
+                className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white rounded-full ${
+                  elapsedInfo.isOnline ? 'bg-[#53dca8] animate-pulse' : 'bg-amber-400'
+                }`} 
+              />
+            </div>
+            <div>
+              <h1 className="font-heading font-bold text-xl text-[#1a1c1d] flex items-center gap-2">
+                Buddy Companion
+              </h1>
+              <span className={`text-xs font-semibold flex items-center gap-1.5 ${
+                elapsedInfo.isOnline ? 'text-emerald-600' : 'text-zinc-600'
+              }`}>
+                <span className={`inline-block w-2 h-2 rounded-full ${
+                  elapsedInfo.isOnline ? 'bg-emerald-500 animate-ping' : 'bg-zinc-400'
+                }`} />
+                {elapsedInfo.isOnline ? '● Online & Active on Web' : `○ Last active: ${elapsedInfo.text}`}
+              </span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-heading font-bold text-xl text-[#1a1c1d]">
-              Buddy Companion
-            </h1>
-            <span className="text-xs text-[#53dca8] font-semibold flex items-center gap-1">
-              ● Online &amp; Caring
-            </span>
+
+          {/* Cloud Synced Badge */}
+          <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
+            <Cloud className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Cloud Synced</span>
           </div>
         </div>
 
-        {/* Cloud Synced Badge */}
-        <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow-xs">
-          <Cloud className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Cloud Synced</span>
+        {/* Automatic Web Activity / Last Opened Live Card */}
+        <div className="w-full bg-gradient-to-r from-[#f5f3ff] via-[#faf8ff] to-[#eef9f5] rounded-2xl p-3.5 border border-[#e0dbff] flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#5843d1]/10 flex items-center justify-center text-[#5843d1]">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold text-[#5843d1] uppercase tracking-wider flex items-center gap-1">
+                <Activity className="w-3 h-3 inline" /> Last Web Opened Time
+              </span>
+              <span className="text-xs font-extrabold text-[#1a1c1d]">
+                {webActivity?.lastOpenedFormatted || 'Today (Active)'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 ${
+              elapsedInfo.isOnline 
+                ? 'bg-emerald-100/90 text-emerald-800 border border-emerald-200' 
+                : 'bg-amber-100/90 text-amber-800 border border-amber-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${elapsedInfo.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              {elapsedInfo.isOnline ? 'Active Now' : elapsedInfo.text}
+            </div>
+
+            <div className="px-2.5 py-1 rounded-lg bg-white/80 text-[#5843d1] text-[11px] font-semibold border border-purple-100 flex items-center gap-1">
+              {webActivity?.deviceType === 'Mobile' ? <Smartphone className="w-3 h-3 inline" /> : <Monitor className="w-3 h-3 inline" />}
+              <span>{webActivity?.deviceType || 'Web'}</span>
+            </div>
+          </div>
         </div>
+
       </div>
 
       {/* Message Stream */}
-      <div className="flex-1 py-6 space-y-4 overflow-y-auto max-h-[60vh]">
+      <div className="flex-1 py-6 space-y-4 overflow-y-auto max-h-[55vh]">
         {messages.map(msg => (
           <div
             key={msg.id}
@@ -195,6 +265,14 @@ export const ChatScreen: React.FC = () => {
         </button>
       </form>
 
+      {/* Footer Credit */}
+      <div className="w-full mt-4 pt-4 border-t border-zinc-200/60 flex items-center justify-center text-xs text-[#787586]">
+        <span className="px-2.5 py-0.5 rounded-full bg-[#f2f0ff] text-[#5843d1] font-semibold border border-[#dcd7f9]">
+          The web made by Saurabh ✨
+        </span>
+      </div>
+
     </div>
   );
 };
+
