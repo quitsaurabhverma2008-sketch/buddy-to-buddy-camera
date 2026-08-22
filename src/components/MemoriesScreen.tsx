@@ -362,8 +362,8 @@ export const MemoriesScreen: React.FC<MemoriesScreenProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-6">
-          <button onClick={() => onSelectTab('community')} className="hover:text-[#5843d1] transition-colors">Privacy</button>
-          <button onClick={() => onSelectTab('community')} className="hover:text-[#5843d1] transition-colors">Terms</button>
+          <button onClick={() => onSelectTab('chat')} className="hover:text-[#5843d1] transition-colors">Privacy</button>
+          <button onClick={() => onSelectTab('chat')} className="hover:text-[#5843d1] transition-colors">Terms</button>
           <button onClick={() => onSelectTab('chat')} className="hover:text-[#5843d1] transition-colors">Contact</button>
         </div>
       </footer>

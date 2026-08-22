@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationTab } from '../types';
 import { soundEngine } from '../utils/audio';
-import { Home, BookOpen, Users, MessageCircle } from 'lucide-react';
+import { Home, BookOpen, MessageCircle } from 'lucide-react';
 
 interface BottomNavProps {
   currentTab: NavigationTab;
@@ -22,7 +22,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const navItems: { id: NavigationTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'home', label: 'Home', icon: <Home className="w-5 h-5 sm:w-6 sm:h-6" /> },
     { id: 'memories', label: 'Memories', icon: <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />, badge: photoCount },
-    { id: 'community', label: 'Community', icon: <Users className="w-5 h-5 sm:w-6 sm:h-6" /> },
     { id: 'chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" /> },
   ];
 
