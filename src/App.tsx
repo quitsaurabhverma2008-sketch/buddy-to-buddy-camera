@@ -13,8 +13,16 @@ import { CommunityScreen } from './components/CommunityScreen';
 import { ChatScreen } from './components/ChatScreen';
 import { PhotoDetailModal } from './components/PhotoDetailModal';
 import { DeleteAllModal } from './components/DeleteAllModal';
+import { PasswordGate } from './components/PasswordGate';
 
 export default function App() {
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('cherish_app_unlocked') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [currentTab, setCurrentTab] = useState<NavigationTab>('home');
   const [photos, setPhotos] = useState<PhotoRecord[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoRecord | null>(null);
@@ -126,6 +134,11 @@ export default function App() {
     setSettings(newSettings);
     storageService.saveSettings(newSettings);
   };
+
+  // If website is opened and not unlocked, show only clean white Password Gate screen
+  if (!isUnlocked) {
+    return <PasswordGate onUnlock={() => setIsUnlocked(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#f9f9fb] text-[#1a1c1d] relative flex flex-col font-sans selection:bg-[#5843d1]/20 selection:text-[#5843d1]">
