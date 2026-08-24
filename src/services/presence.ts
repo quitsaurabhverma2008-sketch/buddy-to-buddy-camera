@@ -26,7 +26,7 @@ const PRESENCE_COLLECTION = 'presence';
 const SESSIONS_COLLECTION = 'web_sessions';
 
 // Persistent anonymous client ID per browser without login
-const getAnonymousClientId = (): string => {
+export const getAnonymousClientId = (): string => {
   try {
     let clientId = localStorage.getItem('cherish_client_id');
     if (!clientId) {
