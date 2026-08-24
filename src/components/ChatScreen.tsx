@@ -20,8 +20,11 @@ import {
   User,
   MessageCircle,
   AlertTriangle,
-  Heart
+  Heart,
+  Bell,
+  BellRing
 } from 'lucide-react';
+import { notifyBellRing } from '../services/notificationService';
 import { db } from '../services/firebase';
 import { 
   collection, 
@@ -81,6 +84,25 @@ export const ChatScreen: React.FC = () => {
   // Delete confirm modal state
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [showClearAllModal, setShowClearAllModal] = useState<boolean>(false);
+  const [isRinging, setIsRinging] = useState<boolean>(false);
+  const [ringToast, setRingToast] = useState<string | null>(null);
+
+  const handleRingSaurabh = async () => {
+    soundEngine.playChime();
+    setIsRinging(true);
+    setRingToast('🔔 Ringing Saurabh... Mail alert sent!');
+
+    await notifyBellRing('Sakshi / Chat Partner');
+
+    setTimeout(() => {
+      setRingToast('✨ Mail notification sent to Saurabh!');
+      setIsRinging(false);
+    }, 1200);
+
+    setTimeout(() => {
+      setRingToast(null);
+    }, 4000);
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -247,8 +269,29 @@ export const ChatScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Device ID Badge & Clear Chat Action */}
+          {/* Ring Bell, Device ID Badge & Clear Chat Action */}
           <div className="flex items-center gap-2">
+            {/* Quick Ring Saurabh Button */}
+            <button
+              onClick={handleRingSaurabh}
+              title="Ring / Ping Saurabh's Mail"
+              className={`p-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 ${
+                isRinging 
+                  ? 'bg-amber-500 text-white border-amber-400 animate-bounce' 
+                  : 'bg-white hover:bg-purple-50 text-[#5843d1] border-purple-200'
+              }`}
+            >
+              <div className="relative">
+                {isRinging ? (
+                  <BellRing className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Bell className="w-3.5 h-3.5 text-[#5843d1]" />
+                )}
+                <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-pink-500 animate-ping" />
+              </div>
+              <span className="text-[11px] font-bold">Ring</span>
+            </button>
+
             <div className="hidden sm:inline-flex items-center gap-1 bg-[#f4f2ff] border border-[#e2ddfc] text-[#5843d1] px-2.5 py-1 rounded-full text-[11px] font-bold">
               <User className="w-3 h-3 text-[#5843d1]" />
               <span className="font-mono">{myClientId ? myClientId.substring(0, 10) : 'Guest'}...</span>
@@ -266,6 +309,14 @@ export const ChatScreen: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Ring Alert Toast for Chat Screen */}
+        {ringToast && (
+          <div className="bg-zinc-900 text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg animate-in fade-in">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span>{ringToast}</span>
+          </div>
+        )}
 
         {/* Live Active Tracker Card */}
         <div className="w-full bg-gradient-to-r from-[#f5f3ff] via-[#faf8ff] to-[#eef9f5] rounded-2xl p-3.5 border border-[#e0dbff] flex flex-wrap items-center justify-between gap-3 shadow-xs">

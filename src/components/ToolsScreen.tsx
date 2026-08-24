@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppSettings, PhotoRecord, NavigationTab } from '../types';
 import { soundEngine } from '../utils/audio';
 import { 
@@ -19,8 +19,12 @@ import {
   Cloud, 
   ExternalLink,
   Bell,
-  Smartphone
+  Smartphone,
+  Mail,
+  Send,
+  Eye
 } from 'lucide-react';
+import { isOwnerDevice, setOwnerDeviceStatus, sendEmailNotification } from '../services/notificationService';
 
 interface ToolsScreenProps {
   settings: AppSettings;
@@ -42,6 +46,35 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   onSelectTab
 }) => {
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [isTestingMail, setIsTestingMail] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsOwner(isOwnerDevice());
+  }, []);
+
+  const handleToggleOwnerDevice = () => {
+    soundEngine.playPop();
+    const nextVal = !isOwner;
+    setIsOwner(nextVal);
+    setOwnerDeviceStatus(nextVal);
+    showToast(nextVal ? "Marked as Saurabh's Phone (Owner Device)" : "Marked as Guest / Visitor Device");
+  };
+
+  const handleSendTestEmail = async () => {
+    soundEngine.playPop();
+    setIsTestingMail(true);
+    showToast('Sending test email notification to uniquegksaurabh@gmail.com...');
+    
+    await sendEmailNotification({
+      type: 'BELL_RING',
+      title: '🧪 Test Notification Alert',
+      message: 'This is a test alert from Cherish App Settings to verify your email notifications are working perfectly!'
+    });
+
+    setIsTestingMail(false);
+    showToast('✨ Test email dispatched to uniquegksaurabh@gmail.com');
+  };
 
   const showToast = (msg: string) => {
     soundEngine.playChime();
@@ -315,7 +348,76 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
           </div>
         </div>
 
-        {/* Card 4: VERCEL DEPLOYMENT GUIDE */}
+        {/* Card 4: INSTANT EMAIL NOTIFICATION HUB */}
+        <div className="clay-card rounded-[2.5rem] p-6 sm:p-8 bg-white/90 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white flex items-center justify-center shadow-md">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-heading font-bold text-lg text-[#1a1c1d]">
+                  Email Alerts Hub
+                </h2>
+                <p className="text-xs text-[#787586]">Instant alerts to your inbox</p>
+              </div>
+            </div>
+
+            {/* Config & status info */}
+            <div className="space-y-3 text-xs text-[#474554] bg-[#fdfcff] p-4 rounded-2xl border border-purple-100">
+              <div className="flex items-center justify-between pb-2 border-b border-purple-50">
+                <span className="text-[#787586] font-semibold">Recipient Mail:</span>
+                <span className="font-mono font-bold text-[#5843d1]">uniquegksaurabh@gmail.com</span>
+              </div>
+
+              <div className="space-y-1.5 text-[11px]">
+                <p className="flex items-center gap-2 text-zinc-700">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span><strong>New Photo Alert:</strong> Triggers when any photo is saved.</span>
+                </p>
+                <p className="flex items-center gap-2 text-zinc-700">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span><strong>Visitor Online Alert:</strong> Triggers when web is opened.</span>
+                </p>
+                <p className="flex items-center gap-2 text-zinc-700">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span><strong>Bell Icon Tap:</strong> Triggers on bell ring in Navbar/Chat.</span>
+                </p>
+              </div>
+
+              {/* Toggle: This device is Saurabh's phone */}
+              <div className="pt-2 border-t border-purple-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-[#5843d1]" />
+                  <span className="text-[11px] font-bold text-zinc-800">This is My Primary Phone</span>
+                </div>
+                <button
+                  onClick={handleToggleOwnerDevice}
+                  className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer ${
+                    isOwner ? 'bg-[#5843d1]' : 'bg-zinc-300'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                    isOwner ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 flex items-center justify-between gap-2">
+            <button
+              onClick={handleSendTestEmail}
+              disabled={isTestingMail}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#5843d1] hover:bg-[#4834be] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-98 cursor-pointer disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{isTestingMail ? 'Sending...' : 'Send Test Mail to Saurabh'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Card 5: VERCEL DEPLOYMENT GUIDE */}
         <div className="clay-card rounded-[2.5rem] p-6 sm:p-8 bg-white/90 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-4">

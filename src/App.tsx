@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationTab, PhotoRecord, AppSettings } from './types';
 import { storageService } from './services/storage';
-import { startPresenceHeartbeat } from './services/presence';
+import { startPresenceHeartbeat, getAnonymousClientId } from './services/presence';
+import { notifyNewPhoto, notifyVisitorOnline } from './services/notificationService';
 import { soundEngine } from './utils/audio';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -78,10 +79,13 @@ export default function App() {
     };
   }, []);
 
-  // Save new photo
+  // Save new photo & trigger automatic email alert to Saurabh's mail
   const handleSavePhoto = async (photo: PhotoRecord) => {
     await storageService.savePhoto(photo);
     setPhotos(prev => [photo, ...prev.filter(p => p.id !== photo.id)]);
+    
+    // Automatic email notification on new pic
+    notifyNewPhoto(photo.title || 'New Captured Memory', photo.id);
   };
 
   // Delete single photo
@@ -137,7 +141,15 @@ export default function App() {
 
   // If website is opened and not unlocked, show only clean white Password Gate screen
   if (!isUnlocked) {
-    return <PasswordGate onUnlock={() => setIsUnlocked(true)} />;
+    return (
+      <PasswordGate 
+        onUnlock={() => {
+          setIsUnlocked(true);
+          const clientId = getAnonymousClientId();
+          notifyVisitorOnline(clientId);
+        }} 
+      />
+    );
   }
 
   return (

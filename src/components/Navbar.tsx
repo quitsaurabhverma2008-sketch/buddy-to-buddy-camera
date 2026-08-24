@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NavigationTab } from '../types';
-import { ArrowLeft, Camera, Heart, Sparkles, User } from 'lucide-react';
+import { ArrowLeft, Camera, Heart, Sparkles, User, Bell, BellRing, Check } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
+import { notifyBellRing } from '../services/notificationService';
 
 interface NavbarProps {
   currentTab: NavigationTab;
@@ -15,11 +16,31 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
 }) => {
   const [imgError, setImgError] = useState(false);
+  const [isRinging, setIsRinging] = useState(false);
+  const [ringToast, setRingToast] = useState<string | null>(null);
   const logoUrl = 'https://lh3.googleusercontent.com/aida/AEtjO1XK7AozNef2VjvEkYl9rDMHtR_HcBB7_nuuITdilrVBuev2dlkmt1X9zW9RFgK6vdgOOgjZfJqQcQBxQLhrR31y1J1uervAvu2oakO2u67Z2pqN5cVruL19AeUqyy4PBQmMOog3RrRdAAKHGZO0pWLCY0zSZTAj2ONtF717xfkWfgb9OVhYpZp9-ly0ye5ro9WYDDISe6dUZvBNKozYM2mj002IVzi5xmQKZIM27OqNRWb5e2tYnu3S8w';
 
   const handleNav = (tab: NavigationTab) => {
     soundEngine.playPop();
     onSelectTab(tab);
+  };
+
+  const handleBellClick = async () => {
+    soundEngine.playChime();
+    setIsRinging(true);
+    setRingToast('🔔 Ringing Saurabh... Sending mail alert!');
+
+    // Trigger instant email notification
+    await notifyBellRing('Sakshi / Visitor');
+
+    setTimeout(() => {
+      setRingToast('✨ Mail notification sent to Saurabh!');
+      setIsRinging(false);
+    }, 1200);
+
+    setTimeout(() => {
+      setRingToast(null);
+    }, 4500);
   };
 
   const isCamera = currentTab === 'capture';
@@ -33,6 +54,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           : 'bg-[#f9f9fb]/85 backdrop-blur-2xl border-b border-white/80 shadow-[0_4px_24px_rgba(90,70,211,0.06)]'
       }`}
     >
+      {/* Ring Toast Alert Floating Notice */}
+      {ringToast && (
+        <div className="absolute top-22 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-zinc-700/60 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>{ringToast}</span>
+        </div>
+      )}
+
       <div className="h-20 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between pointer-events-auto">
         
         {/* Left Action: Back Arrow in Camera Mode OR Brand Logo in Normal Mode */}
@@ -87,11 +116,34 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Action Buttons (Hidden in Camera View) */}
         {!isCamera && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Interactive Bell Icon (Tap to Notify Saurabh's Mail) */}
+            <button
+              id="nav-bell-btn"
+              onClick={handleBellClick}
+              title="Ring / Notify Saurabh's Mail"
+              className={`relative h-11 px-3 sm:px-3.5 rounded-2xl flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs border active:scale-95 ${
+                isRinging 
+                  ? 'bg-amber-500 text-white border-amber-400 animate-bounce' 
+                  : 'bg-white hover:bg-purple-50 text-[#5843d1] border-purple-100 hover:border-purple-200'
+              }`}
+            >
+              <div className="relative">
+                {isRinging ? (
+                  <BellRing className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <Bell className="w-4 h-4 text-[#5843d1]" />
+                )}
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-pink-500 animate-ping" />
+              </div>
+              <span className="hidden sm:inline">Ring</span>
+            </button>
+
             {/* User Profile Badge */}
             <div
               id="nav-user-avatar"
-              title="Profile"
+              onClick={() => handleNav('tools')}
+              title="Profile & Settings"
               className="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#5843d1] to-[#8d79ff] flex items-center justify-center text-white shadow-[0_6px_16px_rgba(88,67,209,0.25),inset_2px_2px_4px_rgba(255,255,255,0.5),inset_-2px_-2px_4px_rgba(0,0,0,0.15)] border border-white/40 select-none cursor-pointer hover:scale-105 active:scale-95 transition-all"
             >
               <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center border border-white/30 shadow-inner">
@@ -106,3 +158,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+
