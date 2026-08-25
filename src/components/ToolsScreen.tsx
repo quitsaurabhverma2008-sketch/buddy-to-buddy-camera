@@ -22,7 +22,8 @@ import {
   Smartphone,
   Mail,
   Send,
-  Eye
+  Eye,
+  CheckCircle2
 } from 'lucide-react';
 import { isOwnerDevice, setOwnerDeviceStatus, sendEmailNotification } from '../services/notificationService';
 
@@ -48,10 +49,42 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [isTestingMail, setIsTestingMail] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState<boolean>(false);
 
   useEffect(() => {
     setIsOwner(isOwnerDevice());
+
+    // Listen for PWA beforeinstallprompt
+    const handleBeforeInstall = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
   }, []);
+
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('🎉 Cherish App successfully installed!');
+        setIsInstalled(true);
+      }
+      setDeferredPrompt(null);
+    } else {
+      showToast('To install: Tap Chrome menu (⋮) -> "Install App" or "Add to Home screen"');
+    }
+  };
 
   const handleToggleOwnerDevice = () => {
     soundEngine.playPop();
@@ -348,7 +381,54 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
           </div>
         </div>
 
-        {/* Card 4: INSTANT EMAIL NOTIFICATION HUB */}
+        {/* Card 4: PWA (INSTALL CHERISH AS APP) */}
+        <div className="clay-card rounded-[2.5rem] p-6 sm:p-8 bg-gradient-to-br from-[#f6f3ff] to-white flex flex-col justify-between border-2 border-[#5843d1]/30">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#5843d1] to-[#8d79ff] text-white flex items-center justify-center shadow-md">
+                <Download className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-heading font-bold text-lg text-[#1a1c1d] flex items-center gap-2">
+                  Install as Mobile App
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">PWA App</span>
+                </h2>
+                <p className="text-xs text-[#787586]">Run Cherish like a native Android/iOS App</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs text-[#474554] bg-white/90 p-4 rounded-2xl border border-purple-100/80">
+              <p className="flex items-center gap-2 font-medium text-zinc-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Zero APK install hassle:</strong> Adds directly to phone home screen.</span>
+              </p>
+              <p className="flex items-center gap-2 font-medium text-zinc-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Full Screen App experience:</strong> No browser search bar or tabs.</span>
+              </p>
+              <p className="flex items-center gap-2 font-medium text-zinc-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span><strong>Instant fast loading &amp; offline support</strong> with cache service worker.</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <button
+              onClick={handleInstallPWA}
+              className={`w-full py-3 px-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer ${
+                isInstalled 
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+                  : 'clay-btn-primary text-white'
+              }`}
+            >
+              <Download className="w-4 h-4" />
+              <span>{isInstalled ? '✓ App Already Installed on Device' : '📱 Install Cherish on Phone / Home Screen'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Card 5: INSTANT EMAIL NOTIFICATION HUB */}
         <div className="clay-card rounded-[2.5rem] p-6 sm:p-8 bg-white/90 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-4">
