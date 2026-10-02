@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Lock, ArrowRight, Eye, EyeOff, KeyRound } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
 
 interface PasswordGateProps {
   onUnlock: () => void;
+  onBackToCalculator?: () => void;
 }
 
-export const PasswordGate: React.FC<PasswordGateProps> = ({ onUnlock }) => {
+export const PasswordGate: React.FC<PasswordGateProps> = ({ onUnlock, onBackToCalculator }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +31,19 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({ onUnlock }) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center px-4 selection:bg-purple-100">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center px-4 selection:bg-purple-100 relative">
+      {onBackToCalculator && (
+        <button
+          type="button"
+          onClick={onBackToCalculator}
+          className="absolute top-6 left-6 text-zinc-500 hover:text-zinc-900 p-2.5 rounded-2xl hover:bg-zinc-100 transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer active:scale-95"
+          title="Back to Calculator"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Calculator</span>
+        </button>
+      )}
+
       <div className="w-full max-w-sm flex flex-col items-center text-center">
         
         {/* Minimalist Lock Icon */}

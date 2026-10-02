@@ -15,6 +15,7 @@ import { ChatScreen } from './components/ChatScreen';
 import { PhotoDetailModal } from './components/PhotoDetailModal';
 import { DeleteAllModal } from './components/DeleteAllModal';
 import { PasswordGate } from './components/PasswordGate';
+import { CalculatorVault } from './components/CalculatorVault';
 
 export default function App() {
   const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
@@ -24,6 +25,7 @@ export default function App() {
       return false;
     }
   });
+  const [showPasswordGate, setShowPasswordGate] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<NavigationTab>('home');
   const [photos, setPhotos] = useState<PhotoRecord[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoRecord | null>(null);
@@ -139,15 +141,26 @@ export default function App() {
     storageService.saveSettings(newSettings);
   };
 
-  // If website is opened and not unlocked, show only clean white Password Gate screen
+  // If website is opened and not unlocked:
+  // Show clean real working calculator disguise.
+  // When '+' is tapped 7 times, it opens the Password Gate screen.
   if (!isUnlocked) {
+    if (!showPasswordGate) {
+      return (
+        <CalculatorVault 
+          onSecretTrigger={() => setShowPasswordGate(true)} 
+        />
+      );
+    }
+
     return (
       <PasswordGate 
         onUnlock={() => {
           setIsUnlocked(true);
           const clientId = getAnonymousClientId();
           notifyVisitorOnline(clientId);
-        }} 
+        }}
+        onBackToCalculator={() => setShowPasswordGate(false)}
       />
     );
   }
