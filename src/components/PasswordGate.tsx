@@ -16,7 +16,7 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({ onUnlock }) => {
     e.preventDefault();
     const cleanInput = password.trim().toLowerCase();
 
-    if (cleanInput === 'sakshi') {
+    if (cleanInput === 'pagalworld') {
       soundEngine.playChime();
       setError(false);
       sessionStorage.setItem('cherish_app_unlocked', 'true');
