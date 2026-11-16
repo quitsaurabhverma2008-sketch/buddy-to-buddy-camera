@@ -47,6 +47,56 @@
         "createdAt": { "type": "number" }
       },
       "required": ["id", "sender", "text"]
+    },
+    "email_notifications": {
+      "title": "Email Notifications Audit Log",
+      "description": "Audit log of automatic and manual email alert dispatches",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "sentTo": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "deliverySuccess": { "type": "boolean" },
+        "deliveryProvider": { "type": "string" }
+      },
+      "required": ["type", "title", "sentTo", "createdAt"]
+    },
+    "app_config": {
+      "title": "App Notification Config",
+      "description": "Shared notification relay settings across devices",
+      "type": "object",
+      "properties": {
+        "web3formsKey": { "type": "string" },
+        "formsubmitTarget": { "type": "string" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "presence": {
+      "title": "Live Presence",
+      "description": "Most recent web activity status",
+      "type": "object",
+      "properties": {
+        "lastActiveTimestamp": { "type": "number" },
+        "lastOpenedTimestamp": { "type": "number" },
+        "lastOpenedFormatted": { "type": "string" },
+        "deviceType": { "type": "string" },
+        "isOnline": { "type": "boolean" }
+      }
+    },
+    "web_sessions": {
+      "title": "Web Session Logs",
+      "description": "Recent visit open/close duration logs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "startTime": { "type": "number" },
+        "endTime": { "type": "number" },
+        "deviceType": { "type": "string" }
+      },
+      "required": ["id", "clientId", "startTime", "endTime"]
     }
   }
 }

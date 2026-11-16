@@ -31,12 +31,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     setRingToast('🔔 Ringing Saurabh... Sending mail alert!');
 
     // Trigger instant email notification
-    await notifyBellRing('Sakshi / Visitor');
+    const res = await notifyBellRing('Sakshi / Visitor');
 
-    setTimeout(() => {
+    setIsRinging(false);
+    if (res.success) {
       setRingToast('✨ Mail notification sent to Saurabh!');
-      setIsRinging(false);
-    }, 1200);
+    } else if (res.needsActivation) {
+      setRingToast('⚠️ Check Gmail to click FormSubmit Activation link once!');
+    } else {
+      setRingToast(`⚠️ Alert logged, mail relay note: ${res.message || 'Check Email Hub'}`);
+    }
 
     setTimeout(() => {
       setRingToast(null);

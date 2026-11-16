@@ -75,6 +75,10 @@ export default function App() {
     // Start automatic web activity / last opened presence tracker (no login required)
     const stopPresence = startPresenceHeartbeat();
 
+    // Notify owner mail if a non-owner device opens the website
+    const clientId = getAnonymousClientId();
+    notifyVisitorOnline(clientId, 'opened');
+
     return () => {
       unsubscribe();
       stopPresence();
@@ -158,7 +162,7 @@ export default function App() {
         onUnlock={() => {
           setIsUnlocked(true);
           const clientId = getAnonymousClientId();
-          notifyVisitorOnline(clientId);
+          notifyVisitorOnline(clientId, 'unlocked');
         }}
         onBackToCalculator={() => setShowPasswordGate(false)}
       />

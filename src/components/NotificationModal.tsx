@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { soundEngine } from '../utils/audio';
-import { sendNotificationEmail } from '../services/emailNotification';
+import { sendEmailNotification } from '../services/notificationService';
 import { Bell, Mail, Send, CheckCircle2, AlertCircle, Loader2, X, Sparkles } from 'lucide-react';
 
 interface NotificationModalProps {
@@ -32,13 +32,13 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     setErrorMessage('');
 
     try {
-      const result = await sendNotificationEmail({
-        toEmail: targetEmail,
+      const result = await sendEmailNotification({
+        type: 'BELL_RING',
+        title: `Bell Alert (${photosCount} Memories)`,
         senderName: senderName.trim() || 'Buddy App User',
         subject: `🔔 Buddy App Live Alert: Photos & Activity (${photosCount} Memories)`,
         message: customNote.trim(),
-        photoCount: photosCount,
-        timestamp: new Date().toLocaleString()
+        timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
       });
 
       if (result.success) {
@@ -46,7 +46,11 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         setStatus('success');
       } else {
         setStatus('error');
-        setErrorMessage(result.error || 'Failed to send email. Please ensure Google login is authorized.');
+        setErrorMessage(
+          result.needsActivation
+            ? 'FormSubmit activation pending: Please open uniquegksaurabh@gmail.com and click the FormSubmit Activate link once, or add a backup Web3Forms key in Tools.'
+            : (result.message || 'Failed to send email notification.')
+        );
       }
     } catch (err: any) {
       setStatus('error');
@@ -95,7 +99,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               Notification Sent Successfully!
             </h3>
             <p className="text-xs text-zinc-600 max-w-xs">
-              Live alert email has been delivered to <strong>{targetEmail}</strong> via Google Workspace Gmail API.
+              Live alert email has been delivered directly to <strong>{targetEmail}</strong> (zero login required).
             </p>
             <button
               onClick={onClose}

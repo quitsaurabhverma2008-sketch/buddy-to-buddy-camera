@@ -23,9 +23,17 @@ import {
   Mail,
   Send,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle,
+  KeyRound
 } from 'lucide-react';
-import { isOwnerDevice, setOwnerDeviceStatus, sendEmailNotification } from '../services/notificationService';
+import {
+  isOwnerDevice,
+  setOwnerDeviceStatus,
+  sendEmailNotification,
+  getNotificationConfig,
+  saveNotificationConfig
+} from '../services/notificationService';
 
 interface ToolsScreenProps {
   settings: AppSettings;
@@ -49,11 +57,17 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [isTestingMail, setIsTestingMail] = useState<boolean>(false);
+  const [web3formsKey, setWeb3formsKey] = useState<string>('');
+  const [isSavingConfig, setIsSavingConfig] = useState<boolean>(false);
+  const [mailStatusNote, setMailStatusNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
 
   useEffect(() => {
     setIsOwner(isOwnerDevice());
+    getNotificationConfig().then((cfg) => {
+      if (cfg.web3formsKey) setWeb3formsKey(cfg.web3formsKey);
+    });
 
     // Listen for PWA beforeinstallprompt
     const handleBeforeInstall = (e: any) => {
@@ -91,22 +105,63 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
     const nextVal = !isOwner;
     setIsOwner(nextVal);
     setOwnerDeviceStatus(nextVal);
-    showToast(nextVal ? "Marked as Saurabh's Phone (Owner Device)" : "Marked as Guest / Visitor Device");
+    showToast(
+      nextVal
+        ? "Marked as Saurabh's Phone (Self-visit alerts skipped)"
+        : 'Marked as Guest / Visitor Device'
+    );
+  };
+
+  const handleSaveBackupKey = async () => {
+    soundEngine.playPop();
+    setIsSavingConfig(true);
+    try {
+      await saveNotificationConfig({ web3formsKey });
+      showToast(
+        web3formsKey.trim()
+          ? '✅ Backup Web3Forms key synced to all devices!'
+          : 'Backup key cleared; using primary server relay.'
+      );
+    } catch {
+      showToast('⚠️ Could not sync key to cloud');
+    } finally {
+      setIsSavingConfig(false);
+    }
   };
 
   const handleSendTestEmail = async () => {
     soundEngine.playPop();
     setIsTestingMail(true);
+    setMailStatusNote(null);
     showToast('Sending test email notification to uniquegksaurabh@gmail.com...');
-    
-    await sendEmailNotification({
-      type: 'BELL_RING',
-      title: '🧪 Test Notification Alert',
-      message: 'This is a test alert from Cherish App Settings to verify your email notifications are working perfectly!'
+
+    const res = await sendEmailNotification({
+      type: 'TEST',
+      title: 'Test Notification Alert',
+      message:
+        'This is a live test alert from Cherish App Settings to verify your email notifications are working!'
     });
 
     setIsTestingMail(false);
-    showToast('✨ Test email dispatched to uniquegksaurabh@gmail.com');
+    if (res.success) {
+      setMailStatusNote({
+        ok: true,
+        text: `Delivered via ${res.provider || 'relay'}! Check Inbox (or Spam once).`
+      });
+      showToast('✨ Test email sent to uniquegksaurabh@gmail.com');
+    } else if (res.needsActivation) {
+      setMailStatusNote({
+        ok: false,
+        text: 'Activation email sent to uniquegksaurabh@gmail.com — open Gmail and click "Activate Form" once, OR paste a free Web3Forms key below.'
+      });
+      showToast('⚠️ Check Gmail to activate FormSubmit once!');
+    } else {
+      setMailStatusNote({
+        ok: false,
+        text: `Relay notice: ${res.message || 'Could not deliver'}. You can paste a free Web3Forms key below for 100% reliability.`
+      });
+      showToast(`⚠️ Mail relay error: ${res.message || 'Failed'}`);
+    }
   };
 
   const showToast = (msg: string) => {
@@ -469,11 +524,14 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
               <div className="pt-2 border-t border-purple-50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-[#5843d1]" />
-                  <span className="text-[11px] font-bold text-zinc-800">This is My Primary Phone</span>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-bold text-zinc-800">This is My Primary Phone</span>
+                    <span className="text-[10px] text-zinc-500">Skip visitor-online alerts for this phone</span>
+                  </div>
                 </div>
                 <button
                   onClick={handleToggleOwnerDevice}
-                  className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer ${
+                  className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer shrink-0 ${
                     isOwner ? 'bg-[#5843d1]' : 'bg-zinc-300'
                   }`}
                 >
@@ -482,6 +540,59 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
                   }`} />
                 </button>
               </div>
+
+              {/* Optional Web3Forms Backup Key (Synced to all devices via Firestore) */}
+              <div className="pt-2.5 border-t border-purple-50 space-y-1.5">
+                <label className="flex items-center justify-between text-[10px] font-bold text-zinc-600">
+                  <span className="flex items-center gap-1">
+                    <KeyRound className="w-3 h-3 text-[#5843d1]" />
+                    Backup Web3Forms Key (Optional)
+                  </span>
+                  <a
+                    href="https://web3forms.com/#start"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[#5843d1] hover:underline font-semibold"
+                  >
+                    Get free key ↗
+                  </a>
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={web3formsKey}
+                    onChange={(e) => setWeb3formsKey(e.target.value)}
+                    placeholder="Paste access key (auto-syncs to all phones)"
+                    className="flex-1 bg-white border border-purple-100 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-800 focus:outline-none focus:border-[#5843d1]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveBackupKey}
+                    disabled={isSavingConfig}
+                    className="px-2.5 py-1.5 rounded-lg bg-purple-100 hover:bg-purple-200 text-[#5843d1] text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingConfig ? '...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Live Test Status Feedback */}
+              {mailStatusNote && (
+                <div
+                  className={`p-2.5 rounded-xl text-[11px] font-medium flex items-start gap-2 ${
+                    mailStatusNote.ok
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200'
+                  }`}
+                >
+                  {mailStatusNote.ok ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  )}
+                  <span>{mailStatusNote.text}</span>
+                </div>
+              )}
             </div>
           </div>
 

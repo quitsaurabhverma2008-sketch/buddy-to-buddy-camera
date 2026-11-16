@@ -91,7 +91,7 @@ export default defineConfig(() => {
                 return;
               }
 
-              if (req.method === 'DELETE') {
+                if (req.method === 'DELETE') {
                 const url = new URL(req.url, 'http://localhost:3000');
                 const id = url.searchParams.get('id');
                 if (id) {
@@ -102,6 +102,51 @@ export default defineConfig(() => {
                 }
                 res.statusCode = 400;
                 res.end(JSON.stringify({ success: false, error: 'ID required' }));
+                return;
+              }
+            }
+
+            if (req.url?.startsWith('/api/notify')) {
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+              res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+              if (req.method === 'OPTIONS') {
+                res.statusCode = 200;
+                res.end();
+                return;
+              }
+
+              if (req.method === 'POST') {
+                let body = '';
+                req.on('data', chunk => { body += chunk; });
+                req.on('end', async () => {
+                  try {
+                    const { default: notifyHandler } = await import('./api/notify');
+                    const parsed = JSON.parse(body || '{}');
+                    const mockReq = { method: 'POST', body: parsed, headers: req.headers };
+                    const mockRes = {
+                      status(code: number) {
+                        res.statusCode = code;
+                        return this;
+                      },
+                      setHeader(name: string, val: string) {
+                        res.setHeader(name, val);
+                      },
+                      json(data: any) {
+                        res.end(JSON.stringify(data));
+                      },
+                      end(data?: string) {
+                        res.end(data);
+                      }
+                    };
+                    await notifyHandler(mockReq, mockRes);
+                  } catch (err: any) {
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ success: false, message: err?.message || 'Dev notify error' }));
+                  }
+                });
                 return;
               }
             }

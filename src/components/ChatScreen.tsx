@@ -90,18 +90,22 @@ export const ChatScreen: React.FC = () => {
   const handleRingSaurabh = async () => {
     soundEngine.playChime();
     setIsRinging(true);
-    setRingToast('🔔 Ringing Saurabh... Mail alert sent!');
+    setRingToast('🔔 Ringing Saurabh... Sending mail alert!');
 
-    await notifyBellRing('Sakshi / Chat Partner');
+    const res = await notifyBellRing('Sakshi / Chat Partner');
 
-    setTimeout(() => {
+    setIsRinging(false);
+    if (res.success) {
       setRingToast('✨ Mail notification sent to Saurabh!');
-      setIsRinging(false);
-    }, 1200);
+    } else if (res.needsActivation) {
+      setRingToast('⚠️ Check Gmail to click FormSubmit Activation link once!');
+    } else {
+      setRingToast(`⚠️ Alert logged, mail relay note: ${res.message || 'Check Email Hub'}`);
+    }
 
     setTimeout(() => {
       setRingToast(null);
-    }, 4000);
+    }, 4500);
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
