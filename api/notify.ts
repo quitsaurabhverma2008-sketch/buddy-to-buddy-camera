@@ -65,8 +65,40 @@ export default async function handler(req: any, res: any) {
   }
 
   const web3Key = (body.web3formsKey || process.env.WEB3FORMS_ACCESS_KEY || '').trim();
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+  const target = (body.formsubmitTarget || process.env.NOTIFICATION_EMAIL || DEFAULT_EMAIL).trim();
 
-  // 1. Try Web3Forms if an access key is configured (highest reliability)
+  // 0. Try Resend if RESEND_API_KEY env var is configured on Vercel
+  if (resendKey) {
+    try {
+      const rRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Cherish Alerts <onboarding@resend.dev>',
+          to: [target],
+          subject,
+          text: `${title}\n\n${message}\n\nTime (IST): ${timeFormatted}\nDevice: ${deviceType}\nVisitor ID: ${senderId}\nApp Link: https://cherishapp.vercel.app`,
+        }),
+      });
+      const rData = await rRes.json().catch(() => ({}));
+      if (rRes.ok && rData.id) {
+        res.status(200).json({
+          success: true,
+          provider: 'resend',
+          message: 'Email delivered via Resend',
+        });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('Resend error, continuing to next relay:', err?.message);
+    }
+  }
+
+  // 1. Try Web3Forms if an access key is configured (works reliably from server & browser)
   if (web3Key) {
     try {
       const w3Res = await fetch('https://api.web3forms.com/submit', {
@@ -100,8 +132,7 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // 2. Primary Zero-Signup Relay: FormSubmit (server-side with guaranteed Origin & Referer)
-  const target = (body.formsubmitTarget || process.env.NOTIFICATION_EMAIL || DEFAULT_EMAIL).trim();
+  // 2. Fallback Zero-Signup Relay: FormSubmit (note: datacenter IPs may hit Cloudflare challenge; client browser will retry if so)
   const formSubmitUrl = `https://formsubmit.co/ajax/${encodeURIComponent(target)}`;
 
   const payloads = [
@@ -119,7 +150,6 @@ export default async function handler(req: any, res: any) {
       Sender_ID: senderId,
       Website_Link: 'https://cherishapp.vercel.app',
     },
-    // Clean minimal fallback payload in case _template table fails on FormSubmit
     {
       name: body.senderName || 'Cherish App',
       email: 'alerts@cherishapp.vercel.app',
@@ -147,11 +177,16 @@ export default async function handler(req: any, res: any) {
       });
 
       const rawText = await fsRes.text();
+      if (rawText.trim().startsWith('<')) {
+        lastErrorMsg = 'FormSubmit blocked server IP with Cloudflare challenge';
+        continue;
+      }
+
       let fsData: any = {};
       try {
         fsData = JSON.parse(rawText);
       } catch {
-        fsData = { message: rawText };
+        fsData = { message: rawText.slice(0, 140) };
       }
 
       const isSuccess = fsData.success === true || fsData.success === 'true';

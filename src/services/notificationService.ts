@@ -139,45 +139,46 @@ export async function sendEmailNotification(payload: NotificationPayload): Promi
     message: 'Could not reach email relay',
   };
 
-  // 1. Primary path: Server-side relay (/api/notify) — guarantees proper Origin/Referer even in PWA standalone mode
-  try {
-    const apiRes = await fetch('/api/notify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        type: payload.type,
-        title: payload.title,
-        message: payload.message,
-        subject,
-        senderName: payload.senderName || `Cherish (${device})`,
-        senderId: payload.senderId || 'Anonymous_Visitor',
-        deviceType: device,
-        timestamp: timeFormatted,
-        photoUrl: payload.photoUrl,
-        web3formsKey: web3formsKey || undefined,
-        formsubmitTarget,
-      }),
-    });
+  // 1. If a Web3Forms key is configured, dispatch via server-side /api/notify (or direct Web3Forms)
+  if (web3formsKey) {
+    try {
+      const apiRes = await fetch('/api/notify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          type: payload.type,
+          title: payload.title,
+          message: payload.message,
+          subject,
+          senderName: payload.senderName || `Cherish (${device})`,
+          senderId: payload.senderId || 'Anonymous_Visitor',
+          deviceType: device,
+          timestamp: timeFormatted,
+          photoUrl: payload.photoUrl,
+          web3formsKey,
+          formsubmitTarget,
+        }),
+      });
 
-    if (apiRes.ok) {
-      const apiData = await apiRes.json().catch(() => null);
-      if (apiData && typeof apiData.success === 'boolean') {
-        result = {
-          success: apiData.success,
-          provider: apiData.provider || 'api',
-          message: apiData.message,
-          needsActivation: Boolean(apiData.needsActivation),
-        };
+      if (apiRes.ok) {
+        const apiData = await apiRes.json().catch(() => null);
+        if (apiData && apiData.success === true) {
+          result = {
+            success: true,
+            provider: apiData.provider || 'web3forms',
+            message: apiData.message,
+          };
+        }
       }
+    } catch (err) {
+      console.warn('/api/notify unreachable for Web3Forms, trying direct fallback:', err);
     }
-  } catch (err) {
-    console.warn('/api/notify unreachable, trying direct fallback:', err);
   }
 
-  // 2. Fallback path: Direct Web3Forms from browser (if key is present and server relay didn't succeed)
+  // 2. Fallback path: Direct Web3Forms from browser
   if (!result.success && web3formsKey) {
     try {
       const w3Res = await fetch('https://api.web3forms.com/submit', {
@@ -208,11 +209,12 @@ export async function sendEmailNotification(payload: NotificationPayload): Promi
     }
   }
 
-  // 3. Fallback path: Direct FormSubmit from browser (only if server relay failed & not already activation-pending)
+  // 3. Direct FormSubmit from browser (real browser IP avoids Cloudflare datacenter block; referrerPolicy: 'origin' preserves domain)
   if (!result.success && !result.needsActivation) {
     try {
       const fsRes = await fetch(`${FORMSUBMIT_BASE}/${encodeURIComponent(formsubmitTarget)}`, {
         method: 'POST',
+        referrerPolicy: 'origin',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
@@ -233,18 +235,24 @@ export async function sendEmailNotification(payload: NotificationPayload): Promi
           Browser_UserAgent: userAgent.substring(0, 120),
         }),
       });
-      const fsData = await fsRes.json().catch(() => ({}));
+      const rawText = await fsRes.text();
+      let fsData: any = {};
+      try {
+        fsData = JSON.parse(rawText);
+      } catch {
+        fsData = { message: rawText.startsWith('<') ? 'Cloudflare/browser check blocked FormSubmit' : rawText.slice(0, 120) };
+      }
       const isOk = fsRes.ok && (fsData.success === true || fsData.success === 'true');
       if (isOk) {
         result = {
           success: true,
-          provider: 'formsubmit-direct',
+          provider: 'formsubmit-browser',
           message: fsData.message || 'Sent via FormSubmit',
         };
       } else if (fsData?.message) {
         result = {
           success: false,
-          provider: 'formsubmit-direct',
+          provider: 'formsubmit-browser',
           message: fsData.message,
           needsActivation: String(fsData.message).toLowerCase().includes('activat'),
         };
